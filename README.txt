@@ -11,6 +11,7 @@ References:
     (https://ntrs.nasa.gov/citations/20200000069)
  2. G.P.Purja Pun, V.Yamakov, J.Hickman, E.H.Glaessgen, Y.Mishin, 
     Physical Review Materials, 4, 113807 (2020).
+    (https://link.aps.org/doi/10.1103/PhysRevMaterials.4.113807)
 
 The trained ANN was produced and offered by Ganga P. Pun and Yuri Mishin 
 from George Mason University.
