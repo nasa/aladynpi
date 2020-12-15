@@ -103,7 +103,15 @@ Use any of the above structures by linking them to structure.plt, e.g.,
 
 =======================================================================
 
-SOURCE FILES:
+SOURCE FILES: 
+
+File: ALADYN_PI.source.zip contains Full Double PRECISION ANN calculation and BOP calculations.
+
+File: ALADYN_PIs.source.zip contains SINGLE PRECISION ( rela(kind=4) ) ANN calculation and Double PRECISION BOP calculations.
+
+-----------------------
+
+Files in ALADYN_PI.source.zip
 
     aladyn_pi.f       - Main program
     aladyn_pi_sys.f   - system modul
@@ -131,6 +139,38 @@ SOURCE FILES:
       subroutine get_T     ! Calculates current system temperature
       subroutine predict_atoms ! Gear predictor call !
       subroutine correct_atoms ! Gear corrector call !
+      
+-----------------------
+
+Files in ALADYN_PIs.source.zip
+
+    aladyn_pi.f       - Main program
+    aladyn_pi_sys.f   - system modul
+    aladyn_pi_sys_OMP.f    - system modul for OpneMP compilation
+    aladyn_pi_sys_NO_OMP.f - system modul without OpneMP compilation
+    aladyn_pi_sys_ACC.f    - system modul for OpneACC compilation
+    aladyn_pi_mods.f  - contains general purpose modules
+    aladyn_pi_IO.f    - I/O operations
+
+    aladyn_pi_ANN_OMPs.f  - Single Precision Artificial Neural Network OpneMP code
+    contains:
+     subroutine Frc_ANN_OMP  ! ANN force & energy (OpenMP version)
+
+    aladyn_pi_ANN_ACCs.f  - Single Precision Artificial Neural Network OpneACC code
+     subroutine Frc_ANN_ACC  ! ANN force & energy (OpenACC version)
+
+    aladyn_pi_PINN_OMP.f - Physically Informed NN OpneMP code
+     subroutine Frc_PINN_OMP ! PINN force & energy (OpenMP version)
+
+    aladyn_pi_PINN_ACC.f - Physically Informed NN OpneACC code
+     subroutine Frc_PINN_ACC ! PINN force & energy (OpenACC version)
+
+    aladyn_pi_MD.f    - molecular dynamics module
+     contains:
+      subroutine get_T     ! Calculates current system temperature
+      subroutine predict_atoms ! Gear predictor call !
+      subroutine correct_atoms ! Gear corrector call !
+
 
 -----------------------------------------------------------------------
 Suggested subroutines for optimization: 
