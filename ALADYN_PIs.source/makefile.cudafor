@@ -1,0 +1,59 @@
+MPIF90 = pgf90
+#FOPTS_DBG = -C -g -gopt -Mbounds -Mchkfpstk -Mchkptr -Mchkstk -Mcoff -Mdwarf1 -Mdwarf2 -Mdwarf3 -Melf -Mnodwarf -Mpgicoff -traceback
+FOPTS_DBG = -g -O0 -Mcuda=debug -Mcuda=lineinfo -Mbounds -traceback -Mcuda=charstring
+#FOPTS_DBG = -O0 -Mcuda=lineinfo -traceback -Mcuda=charstring
+
+#FOPTS_O3 = -g -O0 -traceback -Mcuda=ptxinfo
+FOPTS_O3 = -fast
+#FOPTS_O3 = -g -O0 -traceback -Mpreprocess -Minfo
+
+FOPTS = $(FOPTS_O3)
+
+ifeq ($(DEBUG),TRUE)
+	FOPTS = $(FOPTS_DBG)
+  FOPTS += -Mextend -Mpreprocess
+else
+	FOPTS = $(FOPTS_O3)
+  FOPTS += -Mcuda=fma -Mcuda=unroll # fuse multiply-add instruction 
+  FOPTS += -Minfo=accel -Mextend -Mcuda=ptxinfo -Mcuda=lineinfo -Mpreprocess
+endif
+
+#FOPTS += -Mcuda=cc70 -Mcuda=maxregcount:80 -Mcuda=charstring
+FOPTS += -Mcuda=cc70 -Mcuda=maxregcount:80
+#FOPTS += -Mcudalib=cublas
+
+all: code main
+
+# The order below is essential!
+code:
+
+main: aladyn_pi_sys.o aladyn_pi_mods.o aladyn_pi_ANN_MergeLoops.o aladyn_pi_IO.o aladyn_pi_MD.o get_neighbors.o aladyn_pi.o
+	$(MPIF90) $(FOPTS) aladyn_pi_sys.o aladyn_pi_mods.o aladyn_pi_ANN_MergeLoops.o aladyn_pi_IO.o aladyn_pi_MD.o get_neighbors.o aladyn_pi.o -o aladyn_pi -lcublas
+
+aladyn_pi_sys.o: aladyn_pi_sys.cuf
+	$(MPIF90) -c $(FOPTS) aladyn_pi_sys.cuf
+
+aladyn_pi_mods.o: aladyn_pi_mods.cuf
+	$(MPIF90) -c $(FOPTS) aladyn_pi_mods.cuf
+
+aladyn_pi_ANN_MergeLoops.o: aladyn_pi_ANN_MergeLoops.cuf
+	$(MPIF90) -c $(FOPTS) aladyn_pi_ANN_MergeLoops.cuf
+
+aladyn_pi_IO.o: aladyn_pi_IO.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_IO.f
+
+aladyn_pi_MD.o: aladyn_pi_MD.f
+	$(MPIF90) -c $(FOPTS) -mp aladyn_pi_MD.f
+
+aladyn_pi.o: aladyn_pi.cuf
+#	$(MPIF90) -c -fast -Mcuda=cc70 -Mcuda=fma -Mcuda=unroll -Minfo=accel -Mextend -Mcuda=ptxinfo -Mcuda=lineinfo -Mpreprocess aladyn_pi.cuf
+	$(MPIF90) -c $(FOPTS) aladyn_pi.cuf
+
+get_neighbors.o: get_neighbors.f
+	$(MPIF90) -c -O3 -mp -Mextend -Mpreprocess get_neighbors.f
+
+clean: 
+	rm *.mod
+	rm *.o
+
+
