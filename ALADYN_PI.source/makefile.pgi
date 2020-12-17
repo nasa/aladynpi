@@ -1,0 +1,74 @@
+MPIF90 = mpif90
+FOPTS_DBG = -C -g -gopt -Mbounds -Mchkfpstk -Mchkptr -Mchkstk -Mcoff -Mdwarf1 -Mdwarf2 -Mdwarf3 -Melf -Mnodwarf -Mpgicoff -traceback
+
+FOPTS_O3 = -O3
+
+FOPTS = $(FOPTS_O3)
+
+ifeq ($(DEBUG),TRUE)
+	FOPTS = $(FOPTS_DBG)
+endif
+
+ifeq ($(OMP),TRUE)
+	FOPTS = $(FOPTS_O3)
+  	FOPTS += -mp
+# 	FOPTS += -mp=bind
+endif
+
+ifeq ($(ACC),TRUE)
+	FOPTS = $(FOPTS_O3)
+# 	FOPTS += -acc
+  	FOPTS += -mp
+#  	FOPTS += -ta=tesla:cc35  # K40
+  	FOPTS += -ta=tesla:cc60  # GTX1080
+# 	FOPTS += -ta=tesla:cc70  # V100
+# 	FOPTS += -ta=multicore
+#	FOPTS += -ta=nvidia:managed
+ 	FOPTS += -Mfma # fuse multiply-add instruction 
+ 	FOPTS += -Minfo=accel
+#	FOPTS += -Minfo=all
+ 	FOPTL = -mp=bind
+endif
+
+all: code main
+
+# The order below is essential!
+code:
+
+ifeq ($(OMP),TRUE)
+	cp -f aladyn_pi_sys_OMP.f aladyn_pi_sys.f
+else
+	cp -f aladyn_pi_sys_NO_OMP.f aladyn_pi_sys.f
+endif
+
+ifeq ($(ACC),TRUE)
+	cp -f aladyn_pi_sys_ACC.f aladyn_pi_sys.f
+endif
+
+main: aladyn_pi_sys.o aladyn_pi_mods.o aladyn_pi_ANN_OMP.o aladyn_pi_ANN_ACC.o aladyn_pi_PINN_OMP.o aladyn_pi_PINN_ACC.o aladyn_pi_IO.o aladyn_pi_MD.o aladyn_pi.o
+	$(MPIF90) $(FOPTS) aladyn_pi_sys.o aladyn_pi_mods.o aladyn_pi_ANN_OMP.o aladyn_pi_ANN_ACC.o aladyn_pi_PINN_OMP.o aladyn_pi_PINN_ACC.o aladyn_pi_IO.o aladyn_pi_MD.o aladyn_pi.o -o aladyn_pi
+
+aladyn_pi_sys.o: aladyn_pi_sys.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_sys.f
+aladyn_pi_mods.o: aladyn_pi_mods.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_mods.f
+aladyn_pi_ANN_OMP.o: aladyn_pi_ANN_OMP.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_ANN_OMP.f
+aladyn_pi_ANN_ACC.o: aladyn_pi_ANN_ACC.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_ANN_ACC.f
+aladyn_pi_PINN_OMP.o: aladyn_pi_PINN_OMP.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_PINN_OMP.f
+aladyn_pi_PINN_ACC.o: aladyn_pi_PINN_ACC.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_PINN_ACC.f
+aladyn_pi_IO.o: aladyn_pi_IO.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_IO.f
+aladyn_pi_MD.o: aladyn_pi_MD.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_MD.f
+aladyn_pi.o: aladyn_pi.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi.f
+
+clean: 
+	rm *.mod
+	rm *.o
+
+

@@ -1,0 +1,67 @@
+MPIF90 = ifort
+
+FOPTS_DBG = -g -O0 -fpe0 -ftz -align all -fno-alias -traceback -debug -nolib-inline -fno-inline-functions -assume protect_parens,minus0 -prec-div -prec-sqrt -check bounds -check uninit -fp-stack-check -ftrapuv -init=arrays -init=snan -extend_source
+
+FOPTS_O3R = -O3 -qopt-report=5 -qopt-report-phase=vec
+
+FOPTS_O3 = -g -O3 -extend_source
+#FOPTS_O3 = -g -O3 -xHASWELL -extend_source
+#FOPTS_O3 = -g -O3 -xcore-avx2 -extend_source
+#FOPTS_O3 = -g -O3 -xSKYLAKE-AVX512 -extend_source
+#FOPTS_O3 = -g -O3 -xSKYLAKE-AVX512 -no-prec-div -align array64byte -extend_source
+#FOPTS_O3 = -g -O3 -xSKYLAKE-AVX512 -qopt-zmm-usage=high
+
+FOPTS = $(FOPTS_O3)
+#FOPTS += -mcmodel=medium
+
+ifeq ($(DEBUG),TRUE)
+	FOPTS = $(FOPTS_DBG)
+endif
+
+ifeq ($(REPORT),TRUE)
+	FOPTS = $(FOPTS_O3R)
+endif
+
+ifeq ($(OMP),TRUE)
+	FOPTS = $(FOPTS_O3)
+ 	FOPTS += -qopenmp
+endif
+
+all: code main
+
+# The order below is essential!
+code:
+
+ifeq ($(OMP),TRUE)
+	cp -f aladyn_pi_sys_OMP.f aladyn_pi_sys.f
+else
+	cp -f aladyn_pi_sys_NO_OMP.f aladyn_pi_sys.f
+endif
+
+main: aladyn_pi_sys.o aladyn_pi_mods.o aladyn_pi_ANN_OMP.o aladyn_pi_ANN_ACC.o aladyn_pi_PINN_OMP.o aladyn_pi_PINN_ACC.o aladyn_pi_IO.o aladyn_pi_MD.o aladyn_pi.o
+	$(MPIF90) $(FOPTS) aladyn_pi_sys.o aladyn_pi_mods.o aladyn_pi_ANN_OMP.o aladyn_pi_ANN_ACC.o aladyn_pi_PINN_OMP.o aladyn_pi_PINN_ACC.o aladyn_pi_IO.o aladyn_pi_MD.o aladyn_pi.o -o aladyn_pi
+
+aladyn_pi_sys.o: aladyn_pi_sys.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_sys.f
+aladyn_pi_mods.o: aladyn_pi_mods.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_mods.f
+aladyn_pi_ANN_OMP.o: aladyn_pi_ANN_OMP.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_ANN_OMP.f
+aladyn_pi_ANN_ACC.o: aladyn_pi_ANN_ACC.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_ANN_ACC.f
+aladyn_pi_PINN_OMP.o: aladyn_pi_PINN_OMP.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_PINN_OMP.f
+aladyn_pi_PINN_ACC.o: aladyn_pi_PINN_ACC.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_PINN_ACC.f
+aladyn_pi_IO.o: aladyn_pi_IO.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_IO.f
+aladyn_pi_MD.o: aladyn_pi_MD.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi_MD.f
+aladyn_pi.o: aladyn_pi.f
+	$(MPIF90) -c $(FOPTS) aladyn_pi.f
+
+clean: 
+	rm *.mod
+	rm *.o
+
+
